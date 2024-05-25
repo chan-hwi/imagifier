@@ -1,16 +1,7 @@
 "use server";
 
 import { openai } from "./openai";
-
-interface TIACBody {
-	word: string;
-	definition: string;
-}
-
-interface IChatMessage {
-	role: "user" | "assistant" | "system";
-	content: string;
-}
+import { IChatMessage, TIACBody, TaskResult } from "./types";
 
 export const genTIACDescription = async ({ word, definition }: TIACBody) => {
 	const messages: IChatMessage[] = [
@@ -81,4 +72,58 @@ export const genTranslatedMeanings = async (word: string) => {
 		],
 	});
 	return res.choices?.[0].message?.content;
+};
+
+export const genTIACVideo = async (prompt: string) => {
+	try {
+		const res = await fetch("https://api.novita.ai/v3/async/txt2video", {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${process.env.NOVITA_API_KEY}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				model_name: "darkSushiMixMix_225D_64380.safetensors",
+				height: 512,
+				width: 512,
+				steps: 20,
+				seed: -1,
+				prompts: [
+					{
+						frames: 32,
+						prompt,
+					},
+				],
+				extra: {
+					response_video_type: "gif",
+				},
+				negative_prompt:
+					"nsfw,ng_deepnegative_v1_75t, badhandv4, (worst quality:2),(low quality:2), (normal quality:2), lowres,((monochrome)), ((grayscale)),watermark",
+			}),
+		});
+
+		const { task_id } = await res.json();
+		return task_id;
+	} catch (e) {
+		console.error(e);
+		return null;
+	}
+};
+
+export const getTIACVideoStatus = async (task_id: string) => {
+	try {
+		const res = await fetch(
+			`https://api.novita.ai/v3/async/task-result?task_id=${task_id}`,
+			{
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${process.env.NOVITA_API_KEY}`,
+				},
+			}
+		);
+		return (await res.json()) as TaskResult;
+	} catch (e) {
+		console.error(e);
+		return null;
+	}
 };
