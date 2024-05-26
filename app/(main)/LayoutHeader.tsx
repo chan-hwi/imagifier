@@ -23,11 +23,11 @@ function LayoutHeader() {
 	const pathname = usePathname();
 
 	return (
-		<header className="py-2 flex gap-4 px-4 shadow-md bg-white">
+		<header className="py-2 flex gap-4 px-4 shadow-md bg-white sticky top-0">
 			{routes.map((route) => {
 				const Icon = route.icon;
 				return (
-					<div className="relative" key={route.path}>
+					<motion.div className="relative" key={route.path} layout layoutRoot>
 						<Link
 							href={route.path}
 							key={route.path}
@@ -40,9 +40,10 @@ function LayoutHeader() {
 							<motion.div
 								layoutId="underline"
 								className="absolute w-full left-0 -bottom-2 h-1 bg-primary"
+								style={{ originY: "top" }}
 							/>
 						)}
-					</div>
+					</motion.div>
 				);
 			})}
 		</header>
